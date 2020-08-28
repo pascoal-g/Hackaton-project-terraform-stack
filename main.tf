@@ -6,13 +6,13 @@ provider "aws" {
 data "template_file" "script" {
   template = "${file("${path.module}/script.sh.tpl")}"
   vars = {
-    ECR_REGISTRY = "${var.ECR_REGISTRY}"
+    ECR_REGISTRY = "${var.ECR_REGISTRY}-${terraform.workspace}"
   }
 }
 
 
 variable "project" {
-  default = "fiap-lab"
+  default = "${terraform.workspace}-fiap-lab"
 }
 
 data "aws_vpc" "vpc" {
@@ -42,7 +42,7 @@ resource "random_shuffle" "random_subnet" {
 
 
 resource "aws_elb" "web" {
-  name = "hackton-elb"
+  name = "${terraform.workspace}-hackton-elb"
 
   subnets         = data.aws_subnet_ids.all.ids
   security_groups = ["${aws_security_group.allow-ssh.id}"]
@@ -69,12 +69,11 @@ resource "aws_elb" "web" {
 resource "aws_instance" "web" {
   instance_type = "t2.micro"
   ami           = "${lookup(var.aws_amis, var.aws_region)}"
-
-  count = 1
+  count = "${terraform.workspace == "Prod" ? 2 : 1}"
 
   subnet_id              = "${random_shuffle.random_subnet.result[0]}"
   vpc_security_group_ids = ["${aws_security_group.allow-ssh.id}"]
-  key_name               = "${var.KEY_NAME}"
+  key_name               = "${terraform.workspace}-${var.KEY_NAME}"
   iam_instance_profile   = "${aws_iam_instance_profile.ecr_readOnly_profile.name}"
 
   provisioner "file" {
@@ -96,6 +95,6 @@ resource "aws_instance" "web" {
   }
 
   tags = {
-    Name = "${format("nginx-hackaton-%03d", count.index + 1)}"
+    Name = "${terraform.workspace}-${format("nginx-hackaton-%03d", count.index + 1)}"
   }
 }
