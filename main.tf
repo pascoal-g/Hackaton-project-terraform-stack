@@ -6,7 +6,7 @@ provider "aws" {
 data "template_file" "script" {
   template = "${file("${path.module}/script.sh.tpl")}"
   vars = {
-    ECR_REGISTRY = "${var.ECR_REGISTRY}-${terraform.workspace}"
+    ECR_REGISTRY = "${var.ECR_REGISTRY}"
   }
 }
 
