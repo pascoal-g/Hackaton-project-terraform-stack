@@ -12,12 +12,12 @@ data "template_file" "script" {
 
 
 variable "project" {
-  default = "${terraform.workspace}-fiap-lab"
+  default = "fiap-lab"
 }
 
 data "aws_vpc" "vpc" {
   tags = {
-    Name = "${var.project}"
+    Name = "${terraform.workspace}-${var.project}"
   }
 }
 
